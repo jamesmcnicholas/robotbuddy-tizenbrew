@@ -3,11 +3,11 @@ const STORAGE_KEYS = {
   readToken: "robotbuddy.tv.read_token",
 };
 
-const APP_VERSION = "0.1.6";
+const APP_VERSION = "0.1.7";
 const DEFAULT_BASE_URL = "http://192.168.1.180:8787";
 const DEFAULT_READ_TOKEN = "";
 const POLL_INTERVAL_MS = 5000;
-const RECONNECT_DELAY_MS = 3000;
+const REQUEST_TIMEOUT_MS = 4000;
 
 const faceTemplates = {
   happy: {
@@ -132,9 +132,7 @@ const els = {
 
 const runtime = {
   baseUrl: "",
-  eventSource: null,
   pollTimer: null,
-  reconnectTimer: null,
   readToken: "",
 };
 
@@ -191,19 +189,9 @@ function createHeaders() {
 }
 
 function disconnect() {
-  if (runtime.eventSource) {
-    runtime.eventSource.close();
-    runtime.eventSource = null;
-  }
-
   if (runtime.pollTimer) {
     window.clearInterval(runtime.pollTimer);
     runtime.pollTimer = null;
-  }
-
-  if (runtime.reconnectTimer) {
-    window.clearTimeout(runtime.reconnectTimer);
-    runtime.reconnectTimer = null;
   }
 }
 
@@ -317,17 +305,6 @@ function closeSettings() {
   focusElement(els.settingsToggle);
 }
 
-function scheduleReconnect() {
-  if (runtime.readToken || runtime.reconnectTimer) {
-    return;
-  }
-
-  runtime.reconnectTimer = window.setTimeout(() => {
-    runtime.reconnectTimer = null;
-    connect();
-  }, RECONNECT_DELAY_MS);
-}
-
 function setPrintingProgress(progress) {
   const normalized = Number.isFinite(progress)
     ? Math.max(0, Math.min(100, Math.round(progress)))
@@ -384,25 +361,60 @@ function formatMaybeNumber(value) {
 }
 
 function fetchSnapshot() {
-  return fetch(buildApiUrl("/api/state"), {
-    cache: "no-store",
-    headers: createHeaders(),
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Buddy returned HTTP ${response.status}.`);
+  return new Promise((resolve, reject) => {
+    if (typeof XMLHttpRequest !== "function") {
+      reject(new Error("XMLHttpRequest is unavailable on this TV."));
+      return;
     }
 
-    return response.json().then((snapshot) => {
-      applySnapshot(snapshot);
-      return snapshot;
-    });
+    const request = new XMLHttpRequest();
+    request.open("GET", buildApiUrl("/api/state"), true);
+    request.timeout = REQUEST_TIMEOUT_MS;
+
+    if (runtime.readToken) {
+      request.setRequestHeader("Authorization", `Bearer ${runtime.readToken}`);
+    }
+
+    request.onreadystatechange = () => {
+      if (request.readyState !== 4) {
+        return;
+      }
+
+      if (request.status >= 200 && request.status < 300) {
+        try {
+          const snapshot = JSON.parse(request.responseText);
+          applySnapshot(snapshot);
+          resolve(snapshot);
+        } catch (_error) {
+          reject(new Error("Buddy returned invalid JSON."));
+        }
+        return;
+      }
+
+      if (request.status > 0) {
+        reject(new Error(`Buddy returned HTTP ${request.status}.`));
+        return;
+      }
+
+      reject(new Error("Buddy request failed."));
+    };
+
+    request.onerror = () => {
+      reject(new Error("Buddy request failed."));
+    };
+
+    request.ontimeout = () => {
+      reject(new Error("Buddy request timed out."));
+    };
+
+    request.send();
   });
 }
 
 function startPolling() {
   setTransport("polling", "transport-polling");
   setServerStatus(runtime.baseUrl);
-  setConnectionSummary("Authenticated polling is active.");
+  setConnectionSummary("Polling Buddy over local HTTP.");
 
   const tick = () => {
     fetchSnapshot().catch((error) => {
@@ -416,33 +428,6 @@ function startPolling() {
   runtime.pollTimer = window.setInterval(() => {
     tick();
   }, POLL_INTERVAL_MS);
-}
-
-function startEventStream() {
-  const stream = new EventSource(buildApiUrl("/api/events/stream"));
-  runtime.eventSource = stream;
-
-  stream.addEventListener("open", () => {
-    setTransport("live stream", "transport-live");
-    setServerStatus(runtime.baseUrl);
-    setConnectionSummary("Live updates connected.");
-  });
-
-  stream.addEventListener("snapshot", (event) => {
-    try {
-      applySnapshot(JSON.parse(event.data));
-    } catch (_error) {
-      setConnectionSummary("Received an invalid snapshot event.");
-    }
-  });
-
-  stream.addEventListener("error", () => {
-    setTransport("reconnecting", "transport-error");
-    setConnectionSummary("Live stream interrupted. Retrying shortly.");
-    stream.close();
-    runtime.eventSource = null;
-    scheduleReconnect();
-  });
 }
 
 function connect() {
@@ -468,16 +453,6 @@ function connect() {
 
   return fetchSnapshot()
     .then(() => {
-      if (runtime.readToken) {
-        startPolling();
-        return;
-      }
-
-      if ("EventSource" in window) {
-        startEventStream();
-        return;
-      }
-
       startPolling();
     })
     .catch((error) => {
