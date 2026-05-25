@@ -3,7 +3,7 @@ const STORAGE_KEYS = {
   readToken: "robotbuddy.tv.read_token",
 };
 
-const APP_VERSION = "0.1.5";
+const APP_VERSION = "0.1.6";
 const DEFAULT_BASE_URL = "http://192.168.1.180:8787";
 const DEFAULT_READ_TOKEN = "";
 const POLL_INTERVAL_MS = 5000;
@@ -141,18 +141,21 @@ const runtime = {
 function loadConfig() {
   const storedBaseUrl = localStorage.getItem(STORAGE_KEYS.baseUrl);
   const storedReadToken = localStorage.getItem(STORAGE_KEYS.readToken);
-  const normalizedStoredBaseUrl = normalizeBaseUrl(
-    storedBaseUrl !== null ? storedBaseUrl : DEFAULT_BASE_URL,
-  );
-  runtime.baseUrl = normalizedStoredBaseUrl || DEFAULT_BASE_URL;
-  runtime.readToken = storedReadToken !== null ? storedReadToken : DEFAULT_READ_TOKEN;
+  runtime.baseUrl = DEFAULT_BASE_URL;
+  runtime.readToken = DEFAULT_READ_TOKEN;
 
-  if (!normalizedStoredBaseUrl) {
-    localStorage.setItem(STORAGE_KEYS.baseUrl, runtime.baseUrl);
+  if (storedBaseUrl !== null) {
+    const normalizedStoredBaseUrl = normalizeBaseUrl(storedBaseUrl);
+    if (normalizedStoredBaseUrl) {
+      runtime.baseUrl = normalizedStoredBaseUrl;
+    }
   }
-  if (storedReadToken === null) {
-    localStorage.setItem(STORAGE_KEYS.readToken, runtime.readToken);
+  if (storedReadToken !== null) {
+    runtime.readToken = storedReadToken;
   }
+
+  localStorage.setItem(STORAGE_KEYS.baseUrl, runtime.baseUrl);
+  localStorage.setItem(STORAGE_KEYS.readToken, runtime.readToken);
 }
 
 function saveConfig(baseUrl, readToken) {
@@ -446,6 +449,10 @@ function connect() {
   disconnect();
 
   if (!runtime.baseUrl) {
+    runtime.baseUrl = DEFAULT_BASE_URL;
+  }
+
+  if (!runtime.baseUrl) {
     setTransport("idle", "");
     setServerStatus("not configured");
     setConnectionSummary("No server configured yet.");
@@ -559,6 +566,8 @@ function bindSettings() {
 function init() {
   loadConfig();
   els.versionPill.textContent = `v${APP_VERSION}`;
+  setTransport("booting", "");
+  setServerStatus(runtime.baseUrl);
   els.baseUrlInput.value = runtime.baseUrl;
   els.readTokenInput.value = runtime.readToken;
   bindSettings();
