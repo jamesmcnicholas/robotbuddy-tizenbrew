@@ -1,25 +1,23 @@
 # RobotBuddy TizenBrew Client
 
-This directory is a standalone TizenBrew application module that mirrors the current `robotbuddy` face on a Samsung TV.
+This directory is a standalone TizenBrew application module that launches the Buddy web UI on the same server origin, which avoids the cross-origin XHR path that older Samsung TV engines can mishandle.
 
 ## What It Does
 
-- renders the current Buddy face full-screen
-- shows source, priority, mode, and print progress
-- connects to the Buddy server over local HTTP
-- uses `EventSource` when no read token is configured
-- falls back to polling when a read token is configured
+- opens the Buddy web UI on the server origin
+- avoids cross-origin XHR from the TV module itself
+- keeps the TV install/update flow inside TizenBrew
 
 ## Local Structure
 
 - `package.json`
   - TizenBrew module manifest
 - `app/index.html`
-  - TV app shell
+  - TV launcher shell
 - `app/styles.css`
   - TV styling
 - `app/app.js`
-  - connection logic and face renderer
+  - redirect logic
 
 ## Install Shape
 
@@ -93,12 +91,10 @@ git -C /tmp/robotbuddy-tizenbrew push origin main
 ## TV Setup
 
 1. Open the app on the TV.
-2. Enter the Buddy server base URL, for example `http://192.168.1.50:8787`.
-3. Add a read token only if your Buddy server requires one for `GET /api/state`.
-4. Save.
+2. Let it redirect to the Buddy UI.
+3. If the redirect does not happen, open `http://192.168.1.180:8787/` directly in the TV browser.
 
 Notes:
 
-- The TV app expects the CORS change already added to `robotbuddy`.
-- Live SSE updates are used only when no token is configured, because `EventSource` cannot attach an `Authorization` header.
-- When a token is set, the app switches to polling automatically.
+- The Buddy server already serves its own UI and API on the same origin.
+- That same-origin page is the reliable place to do the live state polling/streaming on this TV.

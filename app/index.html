@@ -3,82 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>RobotBuddy TV</title>
+    <title>RobotBuddy TV Launcher</title>
     <link rel="stylesheet" href="./styles.css" />
+    <meta http-equiv="refresh" content="0; url=http://192.168.1.180:8787/" />
   </head>
   <body>
-    <main class="app-shell">
-      <div class="backdrop backdrop-a"></div>
-      <div class="backdrop backdrop-b"></div>
-
-      <header class="topbar">
-        <div class="brand-block">
-          <p class="eyebrow">RobotBuddy TV</p>
-          <h1>Buddy on the big screen.</h1>
-        </div>
-
-        <div class="status-row">
-          <span class="status-pill" id="versionPill">v0.1.10</span>
-          <span class="status-pill" id="transportPill">booting</span>
-          <span class="status-pill" id="serverPill">http://192.168.1.180:8787</span>
-          <span class="status-pill">fixed endpoint</span>
-        </div>
-      </header>
-
-      <section class="stage-panel" aria-live="polite">
-        <div class="hero-face-wrap">
-          <svg id="buddySvg" viewBox="0 0 320 320" aria-label="Buddy face">
-            <defs>
-              <radialGradient id="faceGlow" cx="35%" cy="30%" r="75%">
-                <stop offset="0%" stop-color="#fff7de"></stop>
-                <stop offset="100%" stop-color="#f1d58a"></stop>
-              </radialGradient>
-            </defs>
-            <circle cx="160" cy="160" r="124" class="face-outer"></circle>
-            <circle cx="160" cy="160" r="100" class="face-inner"></circle>
-            <g id="eyesLayer"></g>
-            <g id="accentLayer"></g>
-          </svg>
-        </div>
-
-        <div class="snapshot-strip">
-          <article class="snapshot-card">
-            <span class="meta-label">Face</span>
-            <strong class="meta-value" id="faceValue">happy</strong>
-          </article>
-          <article class="snapshot-card">
-            <span class="meta-label">Mode</span>
-            <strong class="meta-value" id="modeValue">idle</strong>
-          </article>
-          <article class="snapshot-card">
-            <span class="meta-label">Source</span>
-            <strong class="meta-value" id="sourceValue">system</strong>
-          </article>
-          <article class="snapshot-card">
-            <span class="meta-label">Priority</span>
-            <strong class="meta-value" id="priorityValue">low</strong>
-          </article>
-          <article class="snapshot-card snapshot-card-wide">
-            <span class="meta-label">Printing</span>
-            <strong class="meta-value" id="printingValue">inactive</strong>
-          </article>
-          <article class="snapshot-card snapshot-card-wide">
-            <span class="meta-label">Updated</span>
-            <strong class="meta-value" id="updatedValue">waiting for snapshot</strong>
-          </article>
-        </div>
+    <main class="launcher-shell">
+      <section class="launcher-card" aria-live="polite">
+        <p class="eyebrow">RobotBuddy TV</p>
+        <h1>Opening the Buddy UI.</h1>
+        <p class="launcher-copy">
+          If redirect does not happen automatically, open
+          <strong>http://192.168.1.180:8787/</strong> in the TV browser.
+        </p>
       </section>
-
-      <section class="boot-log-panel">
-        <p class="boot-log-title">Boot Log</p>
-        <pre class="boot-log-output" id="bootLog">waiting for bootstrap</pre>
-      </section>
-
     </main>
-    <script
-      src="./app.js"
-      onload="window.__buddyBootLog && window.__buddyBootLog('external app.js loaded')"
-      onerror="window.__buddyBootLog && window.__buddyBootLog('external app.js failed to load')"
-    ></script>
+    <script src="./app.js"></script>
   </body>
 </html>
