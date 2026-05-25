@@ -139,9 +139,10 @@ const runtime = {
 function loadConfig() {
   const storedBaseUrl = localStorage.getItem(STORAGE_KEYS.baseUrl);
   const storedReadToken = localStorage.getItem(STORAGE_KEYS.readToken);
-  runtime.baseUrl = normalizeBaseUrl(
+  const normalizedStoredBaseUrl = normalizeBaseUrl(
     storedBaseUrl !== null ? storedBaseUrl : DEFAULT_BASE_URL,
   );
+  runtime.baseUrl = normalizedStoredBaseUrl || DEFAULT_BASE_URL;
   runtime.readToken = storedReadToken !== null ? storedReadToken : DEFAULT_READ_TOKEN;
 }
 
