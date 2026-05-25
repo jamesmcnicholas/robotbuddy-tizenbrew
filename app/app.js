@@ -3,6 +3,8 @@ const STORAGE_KEYS = {
   readToken: "robotbuddy.tv.read_token",
 };
 
+const DEFAULT_BASE_URL = "http://192.168.1.180:8787";
+const DEFAULT_READ_TOKEN = "";
 const POLL_INTERVAL_MS = 5000;
 const RECONNECT_DELAY_MS = 3000;
 
@@ -135,8 +137,12 @@ const runtime = {
 };
 
 function loadConfig() {
-  runtime.baseUrl = normalizeBaseUrl(localStorage.getItem(STORAGE_KEYS.baseUrl) || "");
-  runtime.readToken = localStorage.getItem(STORAGE_KEYS.readToken) || "";
+  const storedBaseUrl = localStorage.getItem(STORAGE_KEYS.baseUrl);
+  const storedReadToken = localStorage.getItem(STORAGE_KEYS.readToken);
+  runtime.baseUrl = normalizeBaseUrl(
+    storedBaseUrl !== null ? storedBaseUrl : DEFAULT_BASE_URL,
+  );
+  runtime.readToken = storedReadToken !== null ? storedReadToken : DEFAULT_READ_TOKEN;
 }
 
 function saveConfig(baseUrl, readToken) {
@@ -147,10 +153,10 @@ function saveConfig(baseUrl, readToken) {
 }
 
 function clearConfig() {
-  runtime.baseUrl = "";
-  runtime.readToken = "";
   localStorage.removeItem(STORAGE_KEYS.baseUrl);
   localStorage.removeItem(STORAGE_KEYS.readToken);
+  runtime.baseUrl = normalizeBaseUrl(DEFAULT_BASE_URL);
+  runtime.readToken = DEFAULT_READ_TOKEN;
 }
 
 function normalizeBaseUrl(value) {
@@ -478,13 +484,14 @@ function bindSettings() {
   els.clearConfig.addEventListener("click", () => {
     disconnect();
     clearConfig();
-    els.baseUrlInput.value = "";
-    els.readTokenInput.value = "";
-    setTransport("idle", "");
-    setServerStatus("not configured");
-    setConnectionSummary("Configuration cleared.");
+    els.baseUrlInput.value = runtime.baseUrl;
+    els.readTokenInput.value = runtime.readToken;
+    setTransport("connecting", "");
+    setServerStatus(runtime.baseUrl);
+    setConnectionSummary("Restored bundled Buddy connection.");
     resetSnapshotDisplay();
     renderFace({ face: "happy", printing: null });
+    connect();
   });
 
   els.settingsForm.addEventListener("submit", (event) => {
