@@ -1,4 +1,4 @@
-var TARGET_URL = "http://192.168.1.180:8787/";
+var TARGET_URL = "http://192.168.1.180:8787/face";
 
 function go() {
   try {

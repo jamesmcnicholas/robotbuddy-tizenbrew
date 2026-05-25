@@ -4,7 +4,7 @@ This directory is a standalone TizenBrew application module that launches the Bu
 
 ## What It Does
 
-- opens the Buddy web UI on the server origin
+- opens the Buddy thin-client face page on the server origin
 - avoids cross-origin XHR from the TV module itself
 - keeps the TV install/update flow inside TizenBrew
 
@@ -92,9 +92,9 @@ git -C /tmp/robotbuddy-tizenbrew push origin main
 
 1. Open the app on the TV.
 2. Let it redirect to the Buddy UI.
-3. If the redirect does not happen, open `http://192.168.1.180:8787/` directly in the TV browser.
+3. If the redirect does not happen, open `http://192.168.1.180:8787/face` directly in the TV browser.
 
 Notes:
 
-- The Buddy server already serves its own UI and API on the same origin.
-- That same-origin page is the reliable place to do the live state polling/streaming on this TV.
+- The Buddy server now serves a dedicated `/face` page for thin clients.
+- That same-origin page is the reliable place to do the live state polling on this TV.
