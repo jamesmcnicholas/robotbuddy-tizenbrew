@@ -1,4 +1,4 @@
-var APP_VERSION = "0.1.8";
+var APP_VERSION = "0.1.9";
 var BASE_URL = "http://192.168.1.180:8787";
 var POLL_INTERVAL_MS = 5000;
 var REQUEST_TIMEOUT_MS = 4000;
@@ -98,6 +98,12 @@ var els = {
 };
 
 var pollTimer = null;
+
+function bootLog(message) {
+  if (window.__buddyBootLog) {
+    window.__buddyBootLog(message);
+  }
+}
 
 function setText(element, value) {
   if (element) {
@@ -204,7 +210,10 @@ function showRuntimeError(message) {
 function requestSnapshot(onSuccess, onError) {
   var request;
 
+  bootLog("requestSnapshot start");
+
   if (typeof XMLHttpRequest !== "function") {
+    bootLog("XMLHttpRequest missing");
     onError("XMLHttpRequest unavailable");
     return;
   }
@@ -224,57 +233,72 @@ function requestSnapshot(onSuccess, onError) {
       try {
         snapshot = JSON.parse(request.responseText);
       } catch (_error) {
+        bootLog("json parse failed");
         onError("invalid json");
         return;
       }
+      bootLog("http ok");
       onSuccess(snapshot);
       return;
     }
 
     if (request.status > 0) {
+      bootLog("http error " + request.status);
       onError("http " + request.status);
       return;
     }
 
+    bootLog("request failed without status");
     onError("request failed");
   };
 
   request.onerror = function () {
+    bootLog("xhr onerror");
     onError("network error");
   };
 
   request.ontimeout = function () {
+    bootLog("xhr timeout");
     onError("request timeout");
   };
 
+  bootLog("xhr send");
   request.send(null);
 }
 
 function tick() {
+  bootLog("tick");
   requestSnapshot(
     function (snapshot) {
+      bootLog("snapshot applied");
       setTransport("polling", "transport-polling");
       applySnapshot(snapshot);
     },
     function (reason) {
+      bootLog("snapshot failed: " + reason);
       setTransport("offline", "transport-error");
       setText(els.updatedValue, reason);
-    },
+    }
   );
 }
 
 function init() {
+  bootLog("init start");
   window.onerror = function (message, _source, lineNumber) {
     showRuntimeError(String(message) + " @ " + String(lineNumber || 0));
+    bootLog("window error handler: " + String(message));
     return false;
   };
 
+  bootLog("dom wiring");
   setText(els.versionPill, "v" + APP_VERSION);
   setServerStatus(BASE_URL);
   setTransport("connecting", "");
   renderFace({ face: "happy", printing: null });
+  bootLog("first tick");
   tick();
   pollTimer = window.setInterval(tick, POLL_INTERVAL_MS);
+  bootLog("poll timer armed");
 }
 
 init();

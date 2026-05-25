@@ -250,6 +250,35 @@ input:focus-visible {
   min-height: 102px;
 }
 
+.boot-log-panel {
+  position: relative;
+  z-index: 1;
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(10, 18, 29, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow);
+}
+
+.boot-log-title {
+  margin: 0 0 8px;
+  color: var(--accent-soft);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.boot-log-output {
+  margin: 0;
+  min-height: 6.4em;
+  max-height: 16em;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #f5eed8;
+  font: 0.9rem/1.35 "Courier New", monospace;
+}
+
 .meta-label {
   display: block;
   margin-bottom: 6px;
