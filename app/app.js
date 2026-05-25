@@ -3,6 +3,7 @@ const STORAGE_KEYS = {
   readToken: "robotbuddy.tv.read_token",
 };
 
+const APP_VERSION = "0.1.5";
 const DEFAULT_BASE_URL = "http://192.168.1.180:8787";
 const DEFAULT_READ_TOKEN = "";
 const POLL_INTERVAL_MS = 5000;
@@ -126,6 +127,7 @@ const els = {
   transportPill: document.querySelector("#transportPill"),
   readTokenInput: document.querySelector("#readTokenInput"),
   updatedValue: document.querySelector("#updatedValue"),
+  versionPill: document.querySelector("#versionPill"),
 };
 
 const runtime = {
@@ -144,6 +146,13 @@ function loadConfig() {
   );
   runtime.baseUrl = normalizedStoredBaseUrl || DEFAULT_BASE_URL;
   runtime.readToken = storedReadToken !== null ? storedReadToken : DEFAULT_READ_TOKEN;
+
+  if (!normalizedStoredBaseUrl) {
+    localStorage.setItem(STORAGE_KEYS.baseUrl, runtime.baseUrl);
+  }
+  if (storedReadToken === null) {
+    localStorage.setItem(STORAGE_KEYS.readToken, runtime.readToken);
+  }
 }
 
 function saveConfig(baseUrl, readToken) {
@@ -549,6 +558,7 @@ function bindSettings() {
 
 function init() {
   loadConfig();
+  els.versionPill.textContent = `v${APP_VERSION}`;
   els.baseUrlInput.value = runtime.baseUrl;
   els.readTokenInput.value = runtime.readToken;
   bindSettings();
