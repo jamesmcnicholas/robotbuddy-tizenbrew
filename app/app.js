@@ -226,13 +226,14 @@ function getFocusableElements() {
   return [els.settingsToggle];
 }
 
-function focusElement(element, options = {}) {
+function focusElement(element, options) {
+  const resolvedOptions = options || {};
   if (!element || typeof element.focus !== "function") {
     return;
   }
 
   element.focus();
-  if (options.select && isTextInput(element)) {
+  if (resolvedOptions.select && isTextInput(element)) {
     element.select();
   }
 }
@@ -328,19 +329,21 @@ function resetSnapshotDisplay() {
 }
 
 function renderFace(snapshot) {
-  const face = snapshot?.face || "happy";
+  const face = snapshot && snapshot.face ? snapshot.face : "happy";
   const template = faceTemplates[face] || faceTemplates.happy;
   document.body.className = `face-${face}`;
   els.eyesLayer.innerHTML = template.eyes;
   els.accentLayer.innerHTML = template.accent;
 
   if (face === "printing") {
-    setPrintingProgress(snapshot?.printing?.progress);
+    setPrintingProgress(
+      snapshot && snapshot.printing ? snapshot.printing.progress : undefined,
+    );
   }
 }
 
 function applySnapshot(snapshot) {
-  const printing = snapshot?.printing || null;
+  const printing = snapshot && snapshot.printing ? snapshot.printing : null;
   const updated = new Date();
   els.faceValue.textContent = snapshot.face;
   els.modeValue.textContent = snapshot.mode;
@@ -361,19 +364,20 @@ function formatMaybeNumber(value) {
   return "--";
 }
 
-async function fetchSnapshot() {
-  const response = await fetch(buildApiUrl("/api/state"), {
+function fetchSnapshot() {
+  return fetch(buildApiUrl("/api/state"), {
     cache: "no-store",
     headers: createHeaders(),
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error(`Buddy returned HTTP ${response.status}.`);
+    }
+
+    return response.json().then((snapshot) => {
+      applySnapshot(snapshot);
+      return snapshot;
+    });
   });
-
-  if (!response.ok) {
-    throw new Error(`Buddy returned HTTP ${response.status}.`);
-  }
-
-  const snapshot = await response.json();
-  applySnapshot(snapshot);
-  return snapshot;
 }
 
 function startPolling() {
@@ -381,19 +385,17 @@ function startPolling() {
   setServerStatus(runtime.baseUrl);
   setConnectionSummary("Authenticated polling is active.");
 
-  const tick = async () => {
-    try {
-      await fetchSnapshot();
-    } catch (error) {
+  const tick = () => {
+    fetchSnapshot().catch((error) => {
       const message = error instanceof Error ? error.message : "Polling failed.";
       setTransport("polling error", "transport-error");
       setConnectionSummary(message);
-    }
+    });
   };
 
-  void tick();
+  tick();
   runtime.pollTimer = window.setInterval(() => {
-    void tick();
+    tick();
   }, POLL_INTERVAL_MS);
 }
 
@@ -424,7 +426,7 @@ function startEventStream() {
   });
 }
 
-async function connect() {
+function connect() {
   disconnect();
 
   if (!runtime.baseUrl) {
@@ -432,7 +434,7 @@ async function connect() {
     setServerStatus("not configured");
     setConnectionSummary("No server configured yet.");
     openSettings();
-    return;
+    return Promise.resolve();
   }
 
   els.baseUrlInput.value = runtime.baseUrl;
@@ -441,27 +443,27 @@ async function connect() {
   setServerStatus(runtime.baseUrl);
   setConnectionSummary("Connecting to Buddy.");
 
-  try {
-    await fetchSnapshot();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to reach Buddy.";
-    setTransport("offline", "transport-error");
-    setConnectionSummary(message);
-    openSettings();
-    return;
-  }
+  return fetchSnapshot()
+    .then(() => {
+      if (runtime.readToken) {
+        startPolling();
+        return;
+      }
 
-  if (runtime.readToken) {
-    startPolling();
-    return;
-  }
+      if ("EventSource" in window) {
+        startEventStream();
+        return;
+      }
 
-  if ("EventSource" in window) {
-    startEventStream();
-    return;
-  }
-
-  startPolling();
+      startPolling();
+    })
+    .catch((error) => {
+      const message =
+        error instanceof Error ? error.message : "Unable to reach Buddy.";
+      setTransport("offline", "transport-error");
+      setConnectionSummary(message);
+      openSettings();
+    });
 }
 
 function bindSettings() {
@@ -489,7 +491,7 @@ function bindSettings() {
     event.preventDefault();
     saveConfig(els.baseUrlInput.value, els.readTokenInput.value);
     closeSettings();
-    void connect();
+    connect();
   });
 
   document.addEventListener("keydown", (event) => {
@@ -545,7 +547,7 @@ function init() {
   resetSnapshotDisplay();
   renderFace({ face: "happy", printing: null });
   focusElement(els.settingsToggle);
-  void connect();
+  connect();
 }
 
 init();
