@@ -116,6 +116,7 @@ const els = {
   printingValue: document.querySelector("#printingValue"),
   priorityValue: document.querySelector("#priorityValue"),
   serverPill: document.querySelector("#serverPill"),
+  saveSettings: document.querySelector("#saveSettings"),
   settingsDrawer: document.querySelector("#settingsDrawer"),
   settingsForm: document.querySelector("#settingsForm"),
   settingsToggle: document.querySelector("#settingsToggle"),
@@ -203,16 +204,97 @@ function setConnectionSummary(message) {
   els.connectionSummary.textContent = message;
 }
 
+function isSettingsOpen() {
+  return els.settingsDrawer.classList.contains("is-open");
+}
+
+function isTextInput(element) {
+  return element instanceof HTMLInputElement;
+}
+
+function getFocusableElements() {
+  if (isSettingsOpen()) {
+    return [
+      els.closeSettings,
+      els.baseUrlInput,
+      els.readTokenInput,
+      els.saveSettings,
+      els.clearConfig,
+    ];
+  }
+
+  return [els.settingsToggle];
+}
+
+function focusElement(element, options = {}) {
+  if (!element || typeof element.focus !== "function") {
+    return;
+  }
+
+  element.focus();
+  if (options.select && isTextInput(element)) {
+    element.select();
+  }
+}
+
+function focusFirstAvailableElement() {
+  const [firstElement] = getFocusableElements();
+  focusElement(firstElement, { select: isTextInput(firstElement) });
+}
+
+function moveFocusBy(offset) {
+  const focusableElements = getFocusableElements();
+  if (focusableElements.length === 0) {
+    return;
+  }
+
+  const activeElement = document.activeElement;
+  const activeIndex = focusableElements.findIndex((element) => element === activeElement);
+  const currentIndex = activeIndex >= 0 ? activeIndex : 0;
+  const nextIndex =
+    (currentIndex + offset + focusableElements.length) % focusableElements.length;
+  const nextElement = focusableElements[nextIndex];
+  focusElement(nextElement, { select: isTextInput(nextElement) });
+}
+
+function activateFocusedElement() {
+  const activeElement = document.activeElement;
+  if (!activeElement) {
+    focusFirstAvailableElement();
+    return;
+  }
+
+  if (isTextInput(activeElement)) {
+    focusElement(activeElement, { select: true });
+    return;
+  }
+
+  if (activeElement instanceof HTMLButtonElement) {
+    activeElement.click();
+  }
+}
+
+function isBackKey(event) {
+  return (
+    event.key === "Escape" ||
+    event.key === "Backspace" ||
+    event.key === "BrowserBack" ||
+    event.key === "GoBack" ||
+    event.key === "XF86Back" ||
+    event.keyCode === 10009
+  );
+}
+
 function openSettings() {
   els.settingsDrawer.classList.add("is-open");
-  window.setTimeout(() => {
-    els.baseUrlInput.focus();
-  }, 0);
+  window.requestAnimationFrame(() => {
+    focusElement(els.baseUrlInput, { select: true });
+  });
 }
 
 function closeSettings() {
   els.settingsDrawer.classList.remove("is-open");
-  els.settingsToggle.focus();
+  focusElement(els.settingsToggle);
 }
 
 function scheduleReconnect() {
@@ -412,16 +494,41 @@ function bindSettings() {
 
   document.addEventListener("keydown", (event) => {
     const key = event.key || "";
-    if (key === "Escape" || key === "Backspace" || key === "BrowserBack") {
-      if (els.settingsDrawer.classList.contains("is-open")) {
+    const activeElement = document.activeElement;
+    const editingTextInput = isTextInput(activeElement);
+
+    if (isBackKey(event)) {
+      if (isSettingsOpen()) {
         event.preventDefault();
         closeSettings();
       }
+      return;
+    }
+
+    if (editingTextInput) {
+      return;
+    }
+
+    if (
+      key === "ArrowLeft" ||
+      key === "ArrowUp" ||
+      key === "ArrowRight" ||
+      key === "ArrowDown"
+    ) {
+      event.preventDefault();
+      moveFocusBy(key === "ArrowLeft" || key === "ArrowUp" ? -1 : 1);
+      return;
+    }
+
+    if (key === "Enter" || key === "NumpadEnter") {
+      event.preventDefault();
+      activateFocusedElement();
+      return;
     }
 
     if (key.toLowerCase() === "s") {
       event.preventDefault();
-      if (els.settingsDrawer.classList.contains("is-open")) {
+      if (isSettingsOpen()) {
         closeSettings();
       } else {
         openSettings();
@@ -437,6 +544,7 @@ function init() {
   bindSettings();
   resetSnapshotDisplay();
   renderFace({ face: "happy", printing: null });
+  focusElement(els.settingsToggle);
   void connect();
 }
 

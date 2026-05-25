@@ -151,12 +151,17 @@ input {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.settings-toggle:focus,
+.ghost-button:focus,
+.settings-actions button:focus,
+input:focus,
 .settings-toggle:focus-visible,
 .ghost-button:focus-visible,
 .settings-actions button:focus-visible,
 input:focus-visible {
   outline: 3px solid var(--teal);
   outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(117, 212, 195, 0.18);
 }
 
 .stage-panel {
