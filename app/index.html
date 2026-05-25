@@ -18,7 +18,7 @@
         </div>
 
         <div class="status-row">
-          <span class="status-pill" id="versionPill">v0.1.9</span>
+          <span class="status-pill" id="versionPill">v0.1.10</span>
           <span class="status-pill" id="transportPill">booting</span>
           <span class="status-pill" id="serverPill">http://192.168.1.180:8787</span>
           <span class="status-pill">fixed endpoint</span>
@@ -75,42 +75,6 @@
       </section>
 
     </main>
-    <script>
-      (function () {
-        var logElement = document.getElementById("bootLog");
-
-        function appendBootLog(message) {
-          if (!logElement) {
-            return;
-          }
-
-          if (
-            !logElement.textContent ||
-            logElement.textContent === "waiting for bootstrap"
-          ) {
-            logElement.textContent = String(message);
-            return;
-          }
-
-          logElement.textContent += "\n" + String(message);
-        }
-
-        window.__buddyBootLog = appendBootLog;
-        appendBootLog("inline bootstrap ok");
-
-        window.onerror = function (message, source, lineNumber, columnNumber) {
-          appendBootLog(
-            "window error: " +
-              String(message) +
-              " @ " +
-              String(lineNumber || 0) +
-              ":" +
-              String(columnNumber || 0),
-          );
-          return false;
-        };
-      })();
-    </script>
     <script
       src="./app.js"
       onload="window.__buddyBootLog && window.__buddyBootLog('external app.js loaded')"

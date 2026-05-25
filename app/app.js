@@ -1,4 +1,4 @@
-var APP_VERSION = "0.1.9";
+var APP_VERSION = "0.1.10";
 var BASE_URL = "http://192.168.1.180:8787";
 var POLL_INTERVAL_MS = 5000;
 var REQUEST_TIMEOUT_MS = 4000;
@@ -85,6 +85,7 @@ var faceTemplates = {
 
 var els = {
   accentLayer: document.getElementById("accentLayer"),
+  bootLog: document.getElementById("bootLog"),
   eyesLayer: document.getElementById("eyesLayer"),
   faceValue: document.getElementById("faceValue"),
   modeValue: document.getElementById("modeValue"),
@@ -100,9 +101,26 @@ var els = {
 var pollTimer = null;
 
 function bootLog(message) {
+  var line = String(message);
+
   if (window.__buddyBootLog) {
-    window.__buddyBootLog(message);
+    window.__buddyBootLog(line);
+    return;
   }
+
+  if (!els.bootLog) {
+    return;
+  }
+
+  if (
+    !els.bootLog.textContent ||
+    els.bootLog.textContent === "waiting for bootstrap"
+  ) {
+    els.bootLog.textContent = line;
+    return;
+  }
+
+  els.bootLog.textContent += "\n" + line;
 }
 
 function setText(element, value) {
