@@ -18,12 +18,10 @@
         </div>
 
         <div class="status-row">
-          <span class="status-pill" id="versionPill">v0.1.7</span>
+          <span class="status-pill" id="versionPill">v0.1.8</span>
           <span class="status-pill" id="transportPill">booting</span>
           <span class="status-pill" id="serverPill">http://192.168.1.180:8787</span>
-          <button class="settings-toggle" id="settingsToggle" type="button">
-            Settings
-          </button>
+          <span class="status-pill">fixed endpoint</span>
         </div>
       </header>
 
@@ -71,58 +69,6 @@
         </div>
       </section>
 
-      <aside class="settings-drawer" id="settingsDrawer" aria-label="TV settings">
-        <div class="settings-panel">
-          <div class="settings-head">
-            <div>
-              <p class="eyebrow">Connection</p>
-              <h2>Point the TV at your Buddy server.</h2>
-            </div>
-            <button class="ghost-button" id="closeSettings" type="button">Close</button>
-          </div>
-
-          <form id="settingsForm" class="settings-form">
-            <label>
-              Buddy Base URL
-              <input
-                id="baseUrlInput"
-                name="base_url"
-                type="url"
-                inputmode="url"
-                placeholder="http://192.168.1.50:8787"
-                autocomplete="off"
-              />
-            </label>
-
-            <label>
-              Read Token
-              <input
-                id="readTokenInput"
-                name="read_token"
-                type="password"
-                placeholder="Optional"
-                autocomplete="off"
-              />
-            </label>
-
-            <div class="settings-actions">
-              <button id="saveSettings" type="submit">Save and Connect</button>
-              <button id="clearConfig" class="ghost-button" type="button">Clear</button>
-            </div>
-          </form>
-
-          <div class="settings-notes">
-            <p id="connectionSummary">No server configured yet.</p>
-            <p>
-              Without a token, the app uses live server-sent events. With a token, it
-              switches to authenticated polling.
-            </p>
-            <p>
-              Remote hint: focus the Settings button and press Enter to reopen this panel.
-            </p>
-          </div>
-        </div>
-      </aside>
     </main>
 
     <script src="./app.js"></script>
