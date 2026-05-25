@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>RobotBuddy TV</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <div class="backdrop backdrop-a"></div>
+      <div class="backdrop backdrop-b"></div>
+
+      <header class="topbar">
+        <div class="brand-block">
+          <p class="eyebrow">RobotBuddy TV</p>
+          <h1>Buddy on the big screen.</h1>
+        </div>
+
+        <div class="status-row">
+          <span class="status-pill" id="transportPill">idle</span>
+          <span class="status-pill" id="serverPill">not configured</span>
+          <button class="settings-toggle" id="settingsToggle" type="button">
+            Settings
+          </button>
+        </div>
+      </header>
+
+      <section class="stage-panel" aria-live="polite">
+        <div class="hero-face-wrap">
+          <svg id="buddySvg" viewBox="0 0 320 320" aria-label="Buddy face">
+            <defs>
+              <radialGradient id="faceGlow" cx="35%" cy="30%" r="75%">
+                <stop offset="0%" stop-color="#fff7de"></stop>
+                <stop offset="100%" stop-color="#f1d58a"></stop>
+              </radialGradient>
+            </defs>
+            <circle cx="160" cy="160" r="124" class="face-outer"></circle>
+            <circle cx="160" cy="160" r="100" class="face-inner"></circle>
+            <g id="eyesLayer"></g>
+            <g id="accentLayer"></g>
+          </svg>
+        </div>
+
+        <div class="snapshot-strip">
+          <article class="snapshot-card">
+            <span class="meta-label">Face</span>
+            <strong class="meta-value" id="faceValue">happy</strong>
+          </article>
+          <article class="snapshot-card">
+            <span class="meta-label">Mode</span>
+            <strong class="meta-value" id="modeValue">idle</strong>
+          </article>
+          <article class="snapshot-card">
+            <span class="meta-label">Source</span>
+            <strong class="meta-value" id="sourceValue">system</strong>
+          </article>
+          <article class="snapshot-card">
+            <span class="meta-label">Priority</span>
+            <strong class="meta-value" id="priorityValue">low</strong>
+          </article>
+          <article class="snapshot-card snapshot-card-wide">
+            <span class="meta-label">Printing</span>
+            <strong class="meta-value" id="printingValue">inactive</strong>
+          </article>
+          <article class="snapshot-card snapshot-card-wide">
+            <span class="meta-label">Updated</span>
+            <strong class="meta-value" id="updatedValue">waiting for snapshot</strong>
+          </article>
+        </div>
+      </section>
+
+      <aside class="settings-drawer" id="settingsDrawer" aria-label="TV settings">
+        <div class="settings-panel">
+          <div class="settings-head">
+            <div>
+              <p class="eyebrow">Connection</p>
+              <h2>Point the TV at your Buddy server.</h2>
+            </div>
+            <button class="ghost-button" id="closeSettings" type="button">Close</button>
+          </div>
+
+          <form id="settingsForm" class="settings-form">
+            <label>
+              Buddy Base URL
+              <input
+                id="baseUrlInput"
+                name="base_url"
+                type="url"
+                inputmode="url"
+                placeholder="http://192.168.1.50:8787"
+                autocomplete="off"
+              />
+            </label>
+
+            <label>
+              Read Token
+              <input
+                id="readTokenInput"
+                name="read_token"
+                type="password"
+                placeholder="Optional"
+                autocomplete="off"
+              />
+            </label>
+
+            <div class="settings-actions">
+              <button type="submit">Save and Connect</button>
+              <button id="clearConfig" class="ghost-button" type="button">Clear</button>
+            </div>
+          </form>
+
+          <div class="settings-notes">
+            <p id="connectionSummary">No server configured yet.</p>
+            <p>
+              Without a token, the app uses live server-sent events. With a token, it
+              switches to authenticated polling.
+            </p>
+            <p>
+              Remote hint: focus the Settings button and press Enter to reopen this panel.
+            </p>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
